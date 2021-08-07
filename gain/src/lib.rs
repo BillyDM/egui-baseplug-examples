@@ -46,8 +46,8 @@ impl Default for GainModel {
 struct Gain {}
 
 impl Plugin for Gain {
-    const NAME: &'static str = "iced-baseplug gain";
-    const PRODUCT: &'static str = "iced-baseplug gain";
+    const NAME: &'static str = "egui-baseplug gain";
+    const PRODUCT: &'static str = "egui-baseplug gain";
     const VENDOR: &'static str = "spicy plugins & co";
 
     const INPUT_CHANNELS: usize = 2;
@@ -82,7 +82,7 @@ impl baseplug::PluginUI for Gain {
     fn ui_open(parent: &impl HasRawWindowHandle, model: <Self::Model as Model<Self>>::UI) -> WindowOpenResult<Self::Handle> {
         let settings = Settings {
             window: WindowOpenOptions {
-                title: String::from("iced-baseplug-examples gain"),
+                title: String::from("egui-baseplug-examples gain"),
                 size: Size::new(Self::ui_size().0 as f64, Self::ui_size().1 as f64),
                 scale: WindowScalePolicy::SystemScaleFactor,
             },
