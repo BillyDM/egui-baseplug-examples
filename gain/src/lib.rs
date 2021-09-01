@@ -2,7 +2,7 @@
 #![feature(generic_associated_types)]
 #![feature(min_specialization)]
 
-use baseplug::{Plugin, ProcessContext, WindowOpenResult, Model, UIModel, UIFloatParam};
+use baseplug::{Plugin, ProcessContext, WindowOpenResult, UIModel, Model, UIFloatParam};
 use baseview::{Size, WindowOpenOptions, WindowScalePolicy};
 use raw_window_handle::HasRawWindowHandle;
 use serde::{Deserialize, Serialize};
@@ -27,6 +27,8 @@ baseplug::model! {
         #[parameter(name = "gain master", unit = "Decibels",
             gradient = "Power(0.15)")]
         gain_master: f32,
+
+        non_parameter_value_test: f32,
     }
 }
 
@@ -39,6 +41,8 @@ impl Default for GainModel {
             gain_left: 1.0,
             gain_right: 1.0,
             gain_master: 1.0,
+
+            non_parameter_value_test: 1.0,
         }
     }
 }
@@ -66,8 +70,8 @@ impl Plugin for Gain {
         let output = &mut ctx.outputs[0].buffers;
 
         for i in 0..ctx.nframes {
-            output[0][i] = input[0][i] * model.gain_left[i] * model.gain_master[i];
-            output[1][i] = input[1][i] * model.gain_right[i] * model.gain_master[i];
+            output[0][i] = input[0][i] * model.gain_left[i] * model.gain_master[i] * model.non_parameter_value_test[i];
+            output[1][i] = input[1][i] * model.gain_right[i] * model.gain_master[i] * model.non_parameter_value_test[i];
         }
     }
 }
@@ -102,19 +106,19 @@ impl baseplug::PluginUI for Gain {
             // application and build the UI.
             |egui_ctx: &CtxRef, _queue: &mut Queue, state: &mut State| {
                 // Must be called on the top of each frame in order to sync values from the rt thread.
-                state.model.update();
+                state.model.poll_updates();
 
-                let format_value = |value_text: &mut String, param: &UIFloatParam| {
-                    *value_text = format!("{:.1} {}", param.value(), param.unit_label());
+                let format_value = |value_text: &mut String, param: &UIFloatParam<_, _>| {
+                    *value_text = format!("{:.1} {}", param.unit_value(), param.unit_label());
                 };
 
-                let update_value_text = |value_text: &mut String, param: &UIFloatParam| {
-                    if param.did_change() {
+                let update_value_text = |value_text: &mut String, param: &UIFloatParam<_, _>| {
+                    if param.updated_by_host() {
                         format_value(value_text, param)
                     }
                 };
 
-                let param_slider = |ui: &mut egui::Ui, label: &str, value_text: &mut String, param: &mut UIFloatParam| {
+                let param_slider = |ui: &mut egui::Ui, label: &str, value_text: &mut String, param: &mut UIFloatParam<_, _>| {
                     ui.label(label);
                     ui.label(value_text.as_str());
 
@@ -138,6 +142,12 @@ impl baseplug::PluginUI for Gain {
                     param_slider(ui, "Gain Master", &mut state.gain_master_value, &mut state.model.gain_master);
                     param_slider(ui, "Gain Left", &mut state.gain_left_value, &mut state.model.gain_left);
                     param_slider(ui, "Gain Right", &mut state.gain_right_value, &mut state.model.gain_right);
+
+                    ui.label("non-parameter value test");
+                    let mut value = state.model.non_parameter_value_test.get();
+                    if ui.add(egui::Slider::new(&mut value, 0.0..=1.0)).changed() {
+                        state.model.non_parameter_value_test.set(value);
+                    };
                 });
 
                 // TODO: Add a way for egui-baseview to send a closure that runs every frame without always
@@ -155,7 +165,7 @@ impl baseplug::PluginUI for Gain {
 }
 
 struct State {
-    model: GainModelUI,
+    model: GainModelUI<Gain>,
 
     gain_master_value: String,
     gain_left_value: String,
@@ -163,7 +173,7 @@ struct State {
 }
 
 impl State {
-    pub fn new(model: GainModelUI) -> State {
+    pub fn new(model: GainModelUI<Gain>) -> State {
         State {
             model,
             gain_master_value: String::new(),

@@ -10,10 +10,11 @@ crate-type = ["cdylib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-baseplug = { git = "https://github.com/BillyDM/baseplug.git", rev = "c7b6ae698c4d027288583563b7f3d0b3add2b117" }
+baseplug = { git = "https://github.com/BillyDM/baseplug.git", rev = "6687126ed487d2045c13e45ce2ba0af770eafe2a" }
 baseview = { git = "https://github.com/RustAudio/baseview.git", rev = "d399c1275522ae75f5a82caadd904df2685c8660" }
 egui-baseview = { git = "https://github.com/BillyDM/egui-baseview.git", rev = "a5956c96b5938b68b2bed8bcdfe0016ea66d119f" }
 egui = "0.13"
 serde = { version = "1.0", features = ["derive"] }
 raw-window-handle = "0.3"
+ringbuf = "0.2"
 vst = "0.2"
